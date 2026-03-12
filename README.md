@@ -4,11 +4,26 @@
 
 ## 功能
 
-- 插入 U盘/SD卡自动挂载到 `/home/tope/printer_data/gcodes/usb_disk`
+- 插入 U盘/SD卡自动挂载到 `/home/tope/printer_data/gcodes/usb_disk/{分区名}`
+- 支持多分区设备，每个分区独立挂载
 - 拔出设备自动卸载
 - 支持中文文件名 (UTF-8)
 - 自动设置文件权限为 tope 用户
 - 使用 systemd-mount 实现可靠挂载
+
+## 挂载示例
+
+### 单分区设备
+```
+/home/tope/printer_data/gcodes/usb_disk/sda1/
+```
+
+### 多分区设备
+```
+/home/tope/printer_data/gcodes/usb_disk/sda1/
+/home/tope/printer_data/gcodes/usb_disk/sda2/
+/home/tope/printer_data/gcodes/usb_disk/sda3/
+```
 
 ## 文件结构
 
@@ -130,8 +145,8 @@ sudo udevadm control --reload-rules
 
 ## 注意事项
 
-- 此方案使用固定挂载点，只支持单个 USB 设备
-- 如果同时插入多个 USB 设备，只有第一个会被挂载
+- 每个分区会挂载到独立的子目录（如 `usb_disk/sda1`）
+- 支持同时插入多个 USB 设备
 - 卸载时如果设备正在被使用，umount 可能失败
 
 ## 许可

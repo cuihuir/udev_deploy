@@ -1,5 +1,5 @@
 # USB 自动挂载规则 for RK3566 3D打印机
-# 自动挂载 U盘/SD卡到 /home/tope/printer_data/gcodes/usb_disk
+# 自动挂载 U盘/SD卡到 /home/tope/printer_data/gcodes/usb_disk/{分区名}
 
 # 过滤：只处理块设备分区
 KERNEL!="sd[a-z][0-9]", GOTO="usb_mount_end"
@@ -27,8 +27,8 @@ ENV{ID_FS_USAGE}!="filesystem", GOTO="usb_mount_end"
 # 过滤：跳过CONFIG标签的设备
 ENV{ID_FS_LABEL}=="CONFIG", GOTO="usb_mount_end"
 
-# 设置挂载点（固定路径，适合3D打印机单U盘场景）
-ENV{mount_point}="/home/tope/printer_data/gcodes/usb_disk"
+# 设置挂载点（每个分区独立目录，支持多分区）
+ENV{mount_point}="/home/tope/printer_data/gcodes/usb_disk/%k"
 
 # 挂载：设置挂载选项
 ACTION=="add", ENV{mount_options}="relatime,sync"
