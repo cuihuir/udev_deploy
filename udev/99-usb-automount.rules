@@ -1,0 +1,44 @@
+# USB 自动挂载规则 for RK3566 3D打印机
+# 自动挂载 U盘/SD卡到 /home/tope/printer_data/gcodes/usb_disk
+
+# 过滤：只处理块设备分区
+KERNEL!="sd[a-z][0-9]", GOTO="usb_mount_end"
+
+# 过滤：只处理USB设备
+ENV{ID_PATH}!="*-usb-*", GOTO="usb_mount_end"
+
+# 过滤：跳过HID设备
+KERNEL=="hidraw*", GOTO="usb_mount_end"
+ENV{SUBSYSTEM}=="*hid*", GOTO="usb_mount_end"
+
+# 过滤：跳过TTY设备
+SUBSYSTEM=="tty", GOTO="usb_mount_end"
+
+# 过滤：跳过Klipper设备
+ENV{ID_VENDOR_ID}=="1d50", ENV{ID_MODEL_ID}=="614e", GOTO="usb_mount_end"
+ENV{SUBSYSTEM}=="*tty*", GOTO="usb_mount_end"
+
+# 导入分区信息
+IMPORT{program}="/usr/sbin/blkid -o udev -p %N"
+
+# 过滤：只处理文件系统
+ENV{ID_FS_USAGE}!="filesystem", GOTO="usb_mount_end"
+
+# 过滤：跳过CONFIG标签的设备
+ENV{ID_FS_LABEL}=="CONFIG", GOTO="usb_mount_end"
+
+# 设置挂载点（固定路径，适合3D打印机单U盘场景）
+ENV{mount_point}="/home/tope/printer_data/gcodes/usb_disk"
+
+# 挂载：设置挂载选项
+ACTION=="add", ENV{mount_options}="relatime,sync"
+ACTION=="add", ENV{ID_FS_TYPE}=="vfat|ntfs", ENV{mount_options}="$env{mount_options},utf8,gid=100,umask=002"
+
+# 挂载：执行挂载操作
+ACTION=="add", RUN{program}+="/usr/bin/mkdir -p %E{mount_point}", RUN{program}+="/usr/bin/systemd-mount --no-block --automount=no --collect -o %E{mount_options} $devnode %E{mount_point}"
+
+# 卸载：执行卸载操作
+ACTION=="remove", RUN{program}+="/usr/bin/systemd-umount %E{mount_point}", RUN{program}+="/usr/bin/rmdir %E{mount_point}"
+
+# 结束标签
+LABEL="usb_mount_end"
